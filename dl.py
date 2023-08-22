@@ -7,10 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import logging
 from random import shuffle
+from typing import Any, TypeVar
 
 logging.basicConfig(level = logging.INFO)
 log = logging.getLogger("General Logger")
 mnist_dir_location = os.path.abspath(os.path.join(os.path.dirname(__file__),os.pardir,"mnist"))
+
 
 # Unzips mnist zip into current working directory
 def extractdataset():
@@ -109,6 +111,41 @@ def readdata(files,img_name,label_name):
   dataset = Dataset(imgs=imgs,labels=labels,size=num_imgs,dims=(num_rows,num_cols))
   return dataset
 
+class Matrix(object):
+  def __init__(self,shape:tuple[int,int],mat:np.array) -> None:
+    self.shape = shape
+    self.mat = mat
+    return
+  @classmethod
+  def from_default(cls,rows:int,cols:int,default:float):
+    ndimarray = np.full((rows,cols),fill_value=default,dtype=float)
+    mat = cls((rows,cols),ndimarray)
+    return mat
+  @classmethod
+  def from_array(cls,rows:int,cols:int,result:np.array):
+    mat = cls((rows,cols),result)
+    return mat
+  def __add__(self,other:np.array):
+    x = np.add(self.mat,other.mat)
+    result = Matrix.from_array(self.shape[0],self.shape[1],x)
+    return result
+  def __mul__(self,other:np.array):
+    x = np.matmul(self.mat,other.mat)
+    result = Matrix.from_array(self.shape[0],other.shape[1],x)
+    return result
+  def __repr__(self) -> str:
+    return np.array2string(self.mat, formatter={'float_kind':lambda x: "%.2f" % x})
+    
+class Vector(Matrix):
+  @classmethod
+  def from_default(cls,rows:int,default:float):
+    ndimarray = np.full(rows,fill_value=default,dtype=float)
+    mat = cls((rows,1),ndimarray)
+    return mat
+  @classmethod
+  def from_array(cls,rows:int,result:np.array):
+    mat = cls((rows,1),result)
+    return mat
 class Dataset(object):
   def __init__(self,imgs:np.array,labels:np.array,size:int,dims:tuple[int,int]) -> None:
     self.imgs = imgs
@@ -157,6 +194,7 @@ def main():
   train_set.visualize(10)
   log.info("Validation images with labels")
   validation_set.visualize(10)
+  
 
 if __name__ == '__main__':
   main()
